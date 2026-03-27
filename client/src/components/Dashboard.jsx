@@ -526,7 +526,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats banner */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { label: 'Food Requests', value: pendingRequests.length, icon: Heart, color: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-100' },
           { label: 'SOS Active', value: pendingRequests.filter(r => r.isSOS).length, icon: AlertTriangle, color: 'bg-red-50', text: 'text-red-600', border: 'border-red-100' },

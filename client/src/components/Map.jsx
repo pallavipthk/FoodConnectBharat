@@ -204,7 +204,7 @@ export default function Map({ donations, requests = [], center = [19.213768, 72.
               icon={createDonationIcon(getPinColor(d), hasWarning)}
             >
               <Popup className="donation-popup" minWidth={240}>
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
                   {/* Header row */}
                   <div className="flex items-start justify-between gap-2">
                     <div>
@@ -285,7 +285,7 @@ export default function Map({ donations, requests = [], center = [19.213768, 72.
               icon={createRequestIcon(r.isSOS)}
             >
               <Popup className="donation-popup" minWidth={240}>
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <span className="text-base font-extrabold text-blue-800">

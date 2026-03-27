@@ -28,7 +28,7 @@ export default function SOSButton() {
                 <X size={16} className="text-slate-500" />
               </button>
             </div>
-            <div className="p-6">
+            <div className="max-h-[85vh] overflow-y-auto custom-scrollbar p-6 pt-2">
               <NeedForm isSOS={true} onClose={() => setShowModal(false)} />
             </div>
           </div>

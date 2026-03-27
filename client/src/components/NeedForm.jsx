@@ -101,7 +101,7 @@ export default function NeedForm({ isSOS = false, onClose }) {
     <form onSubmit={handleSubmit} className="space-y-5">
       {!isSOS && (
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-900" style={{ fontFamily: 'Plus Jakarta Sans' }}>Find Food Near You</h2>
+          <h2 className="text-3xl font-black text-slate-900 mb-2" style={{ fontFamily: 'Plus Jakarta Sans' }}>Find Food Near You</h2>
           <p className="text-slate-500 text-sm mt-1">Tell us your needs and we'll match the right food.</p>
         </div>
       )}
