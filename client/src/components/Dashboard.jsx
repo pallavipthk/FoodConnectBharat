@@ -209,36 +209,76 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-  const generateDemos = isNgo ? generateNgoDemos : (isNeeder ? generateNeederDemos : async () => {
-    // Default Fulfiller demo (requests)
+  const generateDonorDemos = async () => {
     const [baseLat, baseLng] = livePos;
     const jitter = () => (Math.random() - 0.5) * 0.005;
     const tok = localStorage.getItem('token');
-    if (!tok) return;
+    if (!tok) return alert('Please login first.');
     setLoading(true);
-    const demoRequests = [
-      { dietaryPref: 'any', numberOfPeople: 5,  latO: 0.005,  lngO: 0.001 },
-      { dietaryPref: 'veg', numberOfPeople: 20, isSOS: true, latO: -0.004, lngO: 0.002 },
-    ];
-    await Promise.all(demoRequests.map(async r => {
-      await fetch('http://localhost:5000/api/requests', {
+    try {
+      const items = [
+        { foodType: 'veg',    quantity: '30 plates',  address: 'Donor Kitchen – Sector 7',  latO:  0.002, lngO:  0.001 },
+        { foodType: 'nonveg', quantity: '15 packets', address: 'Local Restaurant Surplus',    latO: -0.002, lngO:  0.003 },
+        { foodType: 'jain',   quantity: '10 boxes',   address: 'Society Gate – Block C',      latO:  0.003, lngO: -0.002 },
+      ];
+      const results = await Promise.all(items.map(i =>
+        fetch('http://localhost:5000/api/donations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+          body: JSON.stringify({
+            foodType: i.foodType,
+            foodCategory: 'ready-to-eat',
+            quantity: i.quantity,
+            description: `Demo surplus food donated by local donor — ${i.foodType} option.`,
+            location: { lat: baseLat + i.latO + jitter(), lng: baseLng + i.lngO + jitter(), address: i.address },
+            preparedAt: new Date(),
+            estimatedFreshFor: 12,
+          })
+        }).then(r => r.json())
+      ));
+      const errors = results.filter(r => r.error);
+      if (errors.length) console.error('Demo food errors:', errors);
+      alert(`🍲 ${items.length - errors.length} food donations added to the map!`);
+    } catch (e) { console.error(e); }
+    await refresh();
+    setLoading(false);
+  };
+
+  const generateVolunteerDemos = async () => {
+    const [baseLat, baseLng] = livePos;
+    const jitter = () => (Math.random() - 0.5) * 0.005;
+    const tok = localStorage.getItem('token');
+    if (!tok) return alert('Please login first.');
+    setLoading(true);
+    try {
+      await Promise.all([
+        { dietaryPref: 'any', numberOfPeople: 8, isSOS: false, latO:  0.003, lngO:  0.001 },
+        { dietaryPref: 'veg', numberOfPeople: 5, isSOS: true,  latO: -0.002, lngO:  0.004 },
+      ].map(r => fetch('http://localhost:5000/api/requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
         body: JSON.stringify({
-          dietaryPref: r.dietaryPref,
-          numberOfPeople: r.numberOfPeople,
-          isSOS: r.isSOS || false,
-          location: { lat: baseLat + r.latO + jitter(), lng: baseLng + r.lngO + jitter() }
+          dietaryPref: r.dietaryPref, numberOfPeople: r.numberOfPeople, isSOS: r.isSOS,
+          location: { lat: baseLat + r.latO + jitter(), lng: baseLng + r.lngO + jitter() },
         })
-      });
-    }));
+      })));
+      alert('🛵 Demo delivery requests added!');
+    } catch (e) { console.error(e); }
     await refresh();
     setLoading(false);
-  });
+  };
+
+  const generateDemos = isNgo ? generateNgoDemos
+    : isNeeder    ? generateNeederDemos
+    : isDonor     ? generateDonorDemos
+    : isVolunteer ? generateVolunteerDemos
+    : generateDonorDemos;
 
   // ── Filtered data ──────────────────────────────
+  const MAP_LAYER_KEYS = ['both', 'requests', 'donations'];
   const filteredDonations = donations.filter(d => {
-    if (filterType === 'all') return true;
+    // These keys are used for map-layer toggle, not food type — show all food
+    if (filterType === 'all' || MAP_LAYER_KEYS.includes(filterType)) return true;
     if (filterType === 'bhandara') return d.isBhandara;
     return d.foodType === filterType;
   });
@@ -506,11 +546,20 @@ export default function Dashboard() {
       {activeTab === 'map' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-2">Showing:</span>
-              <span className="px-3 py-1.5 rounded-full text-xs font-extrabold bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1.5">
-                <Heart size={11} /> Food Requests Near You
-              </span>
+            {/* Layer toggle */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+              {[
+                { key: 'both',     label: '🗺️ All' },
+                { key: 'requests', label: '🤝 Requests' },
+                { key: 'donations', label: '🍲 Food' },
+              ].map(({ key, label }) => (
+                <button key={key}
+                  onClick={() => setFilterType(key === filterType ? 'both' : key)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap transition-all border ${
+                    filterType === key || (key === 'both' && !['requests','donations'].includes(filterType))
+                      ? 'bg-slate-800 text-white border-slate-800 shadow' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+                  }`}>{label}</button>
+              ))}
             </div>
             <div className="flex gap-2 shrink-0">
               <button onClick={refresh} disabled={loading}
@@ -518,21 +567,35 @@ export default function Dashboard() {
                 <RefreshCw size={12} className={loading ? 'animate-spin' : ''} /> Refresh
               </button>
               <button onClick={generateDemos} disabled={loading}
-                className="flex items-center gap-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full transition border border-blue-200 whitespace-nowrap">
-                <Sparkles size={12} /> Add Demo Requests
+                className="flex items-center gap-1.5 text-xs font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-full transition border border-orange-200 whitespace-nowrap">
+                <Sparkles size={12} />
+                {isDonor ? '+ Demo Food' : isNgo ? '+ Demo Food & Requests' : '+ Demo Requests'}
               </button>
             </div>
           </div>
 
-          {/* Map - shows REQUESTS only for fulfillers */}
+          {/* Map - shows BOTH food and requests for fulfillers */}
           <div className="relative">
-            <Map donations={[]} requests={pendingRequests} mode="requests" />
+            <Map
+              donations={filterType === 'requests' ? [] : filteredDonations}
+              requests={filterType === 'donations' ? [] : pendingRequests}
+              mode="all"
+            />
             <div className="absolute bottom-6 right-4 z-[999]">
               <SOSButton />
             </div>
             <div className="absolute top-4 right-4 z-[500] hidden lg:block w-72 glass-card overflow-hidden shadow-2xl">
               <Leaderboard />
             </div>
+          </div>
+
+          {/* Mini legend */}
+          <div className="flex flex-wrap gap-4 px-1 text-xs text-slate-500 font-medium">
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-green-500 inline-block"/>Veg food</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-yellow-400 inline-block"/>Jain food</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-500 inline-block"/>Non-veg food</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-2.5 rounded bg-sky-500 inline-block"/>Food request</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-2.5 rounded bg-red-600 inline-block"/>SOS request</span>
           </div>
         </div>
       )}

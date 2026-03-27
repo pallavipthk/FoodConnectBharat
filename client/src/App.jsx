@@ -7,9 +7,10 @@ import Profile from './pages/Profile';
 import DonationForm from './components/DonationForm';
 import NeedForm from './components/NeedForm';
 import Leaderboard from './components/Leaderboard';
-import { MapPin, User, Utensils, LogOut, Menu, X, Plus, HeartHandshake, Trophy, Zap } from 'lucide-react';
+import { MapPin, User, Utensils, LogOut, Menu, X, Plus, HeartHandshake, Trophy, Zap, ClipboardList } from 'lucide-react';
 import { motion } from 'framer-motion';
 import RequestPage from './components/RequestPage';
+import FulfillerRequestsPage from './components/FulfillerRequestsPage';
 
 // ── Protected route wrapper ────────────────────────────
 function ProtectedRoute({ children, roles }) {
@@ -26,10 +27,17 @@ function Navbar() {
   const [open, setOpen] = useState(false);
 
   const NAV = user ? [
-    { to: '/dashboard', icon: MapPin,        label: 'Live Map' },
-    ...(user.role === 'donor' || user.role === 'ngo' || user.role === 'volunteer' ? [{ to: '/donate', icon: Plus, label: 'Donate' }] : []),
-    { to: '/request', icon: HeartHandshake, label: 'Requests' },
-    { to: '/leaderboard',      icon: Trophy,        label: 'Leaders' },
+    { to: '/dashboard',   icon: MapPin,         label: 'Live Map' },
+    ...(user.role === 'donor' || user.role === 'ngo' || user.role === 'volunteer'
+      ? [{ to: '/donate', icon: Plus, label: 'Donate' }]
+      : []),
+    ...(user.role === 'needer'
+      ? [{ to: '/request', icon: HeartHandshake, label: 'Need Food' }]
+      : []),
+    ...(user.role === 'donor' || user.role === 'ngo' || user.role === 'volunteer'
+      ? [{ to: '/my-requests', icon: ClipboardList, label: 'Requests' }]
+      : []),
+    { to: '/leaderboard', icon: Trophy,          label: 'Leaders' },
   ] : [];
 
   return (
@@ -295,6 +303,9 @@ function App() {
               } />
               <Route path="/request" element={
                 <ProtectedRoute roles={['needer','ngo', 'donor', 'volunteer']}><RequestPage /></ProtectedRoute>
+              } />
+              <Route path="/my-requests" element={
+                <ProtectedRoute roles={['donor','ngo','volunteer']}><FulfillerRequestsPage /></ProtectedRoute>
               } />
               <Route path="/profile" element={
                 <ProtectedRoute><Profile /></ProtectedRoute>
