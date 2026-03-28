@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   MapPin, Plus, HeartHandshake, Utensils, Users, Clock,
   List, AlertTriangle, ChevronRight, Sparkles, RefreshCw,
-  UtensilsCrossed, Heart, Zap, CheckCircle2, Bike, Activity, BrainCircuit, Globe, BarChart3
+  UtensilsCrossed, Heart, Zap, CheckCircle2, Bike, Activity, BrainCircuit, Globe, BarChart3, ShieldCheck
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { localStorageBridge } from '../utils/localStorageBridge';
@@ -670,10 +670,12 @@ export default function Dashboard() {
               <List size={14} /> Inventory
             </button>
           )}
-          <button onClick={() => navigate('/csr-hub')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all text-emerald-600 hover:bg-emerald-50`}>
-            <BarChart3 size={14} /> CSR Hub
-          </button>
+          {!isNeeder && (
+            <button onClick={() => navigate('/csr-hub')}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all text-emerald-600 hover:bg-emerald-50`}>
+              <BarChart3 size={14} /> CSR Hub
+            </button>
+          )}
         </div>
       </div>
 

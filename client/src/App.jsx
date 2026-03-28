@@ -20,7 +20,7 @@ import Dashboard from './components/Dashboard';
 import { 
   MapPin, User, Utensils, LogOut, Menu, X, 
   Plus, HeartHandshake, Trophy, Zap, ClipboardList, 
-  Info, Leaf, Building2, Star, HelpCircle
+  Info, Leaf, Building2, Star, HelpCircle, Truck, ShieldCheck
 } from 'lucide-react';
 
 // ── Protected route wrapper ────────────────────────────
@@ -40,7 +40,7 @@ function Navbar() {
   const NAV = user ? [
     { to: '/dashboard',     icon: MapPin,         label: 'Live Map' },
     { to: '/achievements',  icon: Trophy,         label: 'Achievements' },
-    { to: '/csr-hub',       icon: Building2,      label: 'CSR Hub' },
+    ...(user.role !== 'needer' ? [{ to: '/csr-hub', icon: Building2, label: 'CSR Hub' }] : []),
     // Restoring requests management for donors/vols/ngos
     ...(user.role === 'donor' ? [{ to: '/my-requests', icon: Utensils, label: 'My Food' }] : []),
     ...(user.role === 'needer' ? [{ to: '/my-requests', icon: Utensils, label: 'My Requests' }] : []),
@@ -322,7 +322,10 @@ function App() {
                 <ProtectedRoute roles={['needer','ngo', 'donor', 'volunteer']}><RequestPage /></ProtectedRoute>
               } />
               <Route path="/my-requests" element={
-                <ProtectedRoute roles={['donor','ngo','volunteer']}><FulfillerRequestsPage /></ProtectedRoute>
+                <ProtectedRoute roles={['donor','needer']}><FulfillerRequestsPage /></ProtectedRoute>
+              } />
+              <Route path="/fulfill-requests" element={
+                <ProtectedRoute roles={['ngo','volunteer']}><FulfillerRequestsPage /></ProtectedRoute>
               } />
               <Route path="/profile" element={
                 <ProtectedRoute><Profile /></ProtectedRoute>
